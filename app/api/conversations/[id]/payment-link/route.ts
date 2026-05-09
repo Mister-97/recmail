@@ -3,11 +3,12 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { serviceSupabase } from '@/lib/supabase/service'
 import { sendSms } from '@/lib/twilio'
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new NextResponse('Unauthorized', { status: 401 })
 
+  const { id } = await params
   const { amount, note } = await request.json()
   if (!amount || amount <= 0) return new NextResponse('Invalid amount', { status: 400 })
 
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   const { data: conv } = await serviceSupabase
     .from('conversations')
     .select('id, customer_phone, client_id')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!conv) return new NextResponse('Not found', { status: 404 })
