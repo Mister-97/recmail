@@ -2,9 +2,8 @@ import { NextResponse } from 'next/server'
 import { serviceSupabase } from '@/lib/supabase/service'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function GET() {
+  const resend = new Resend(process.env.RESEND_API_KEY)
   try {
     const { data: clients } = await serviceSupabase
       .from('clients')
