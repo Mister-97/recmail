@@ -297,15 +297,19 @@ export default function MessageThread({ conversation, initialMessages }: Props) 
                 )}>
                   {msg.body}
                 </div>
-                {isOutbound && (msg as Record<string, unknown>).delivery_status && (
-                  <span className={cn('text-[10px] mt-0.5 font-medium',
-                    (msg as Record<string, unknown>).delivery_status === 'delivered' ? 'text-emerald-500'
-                    : (msg as Record<string, unknown>).delivery_status === 'failed' ? 'text-red-400'
-                    : 'text-gray-400'
-                  )}>
-                    {String((msg as Record<string, unknown>).delivery_status)}
-                  </span>
-                )}
+                {isOutbound && (() => {
+                  const ds = (msg as Record<string, unknown>).delivery_status
+                  if (!ds) return null
+                  return (
+                    <span className={cn('text-[10px] mt-0.5 font-medium',
+                      ds === 'delivered' ? 'text-emerald-500'
+                      : ds === 'failed' ? 'text-red-400'
+                      : 'text-gray-400'
+                    )}>
+                      {String(ds)}
+                    </span>
+                  )
+                })()}
               </div>
             </div>
           )
