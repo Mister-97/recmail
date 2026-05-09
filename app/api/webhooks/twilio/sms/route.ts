@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
       !(await depositAlreadySent(conversation.id))
     ) {
       try {
-        const stripe = new Stripe(client.stripe_access_token, { apiVersion: '2025-04-30.basil' })
+        const stripe = new Stripe(client.stripe_access_token, { apiVersion: '2026-04-22.dahlia' })
         const amountCents = Math.round(client.deposit_amount * 100)
 
         const session = await stripe.checkout.sessions.create({

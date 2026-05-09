@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const stripeKey = client?.stripe_secret_key || process.env.STRIPE_SECRET_KEY
     if (!stripeKey) return NextResponse.json({ error: 'Stripe not configured' }, { status: 400 })
 
-    const stripe = new Stripe(stripeKey, { apiVersion: '2025-04-30.basil' })
+    const stripe = new Stripe(stripeKey, { apiVersion: '2026-04-22.dahlia' })
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],

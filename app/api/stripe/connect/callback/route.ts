@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Exchange code for access token
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-04-30.basil' })
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-04-22.dahlia' })
   let token: Stripe.OAuthToken
   try {
     token = await stripe.oauth.token({ grant_type: 'authorization_code', code })

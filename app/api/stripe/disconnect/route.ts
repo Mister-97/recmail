@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   // Deauthorize from Stripe platform
   if (client?.stripe_account_id) {
     try {
-      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-04-30.basil' })
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-04-22.dahlia' })
       await stripe.oauth.deauthorize({
         client_id: process.env.STRIPE_CLIENT_ID!,
         stripe_user_id: client.stripe_account_id,
