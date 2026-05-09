@@ -179,7 +179,7 @@ export default function PipelinePage() {
                           </span>
                           <div className="flex items-center gap-1.5">
                             {conv.urgency >= 4 && (
-                              <Flame className="w-3 h-3 text-orange-400" title="Urgent" />
+                              <span title="Urgent"><Flame className="w-3 h-3 text-orange-400" /></span>
                             )}
                             <span className="text-[12px] font-bold text-gray-700">{fmtVal(conv.value)}</span>
                           </div>
