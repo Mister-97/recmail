@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
   let sent = 0
   for (const client of clients) {
-    const ownerEmail = (client.users as { email: string } | null)?.email
+    const ownerEmail = (client.users as { email: string }[] | null)?.[0]?.email
     if (!ownerEmail) continue
 
     const [
