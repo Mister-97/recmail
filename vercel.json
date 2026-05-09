@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "app/api/webhooks/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "crons": [
+    { "path": "/api/cron/follow-up", "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/digest", "schedule": "0 8 * * *" },
+    { "path": "/api/cron/morning-brief", "schedule": "0 7 * * *" },
+    { "path": "/api/cron/monthly-roi", "schedule": "0 9 1 * *" }
+  ]
+}
