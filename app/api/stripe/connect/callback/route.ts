@@ -26,9 +26,9 @@ export async function GET(request: NextRequest) {
 
   // Exchange code for access token
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-04-22.dahlia' })
-  let token: Stripe.OAuthToken
+  let token: { stripe_user_id?: string; access_token?: string }
   try {
-    token = await stripe.oauth.token({ grant_type: 'authorization_code', code })
+    token = await stripe.oauth.token({ grant_type: 'authorization_code', code }) as { stripe_user_id?: string; access_token?: string }
   } catch (err) {
     console.error('Stripe OAuth token exchange failed:', err)
     return NextResponse.redirect(`${redirectBase}?stripe=error&msg=token_exchange_failed`)
