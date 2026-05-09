@@ -11,7 +11,7 @@ import {
   Tooltip, ResponsiveContainer, Cell, Legend,
 } from 'recharts'
 
-const DATA: Record<'7d' | '30d' | '90d', typeof MOCK_30> = {
+const DATA = {
   '7d': {
     summary: { total: 14, responded: 12, qualified: 6, won: 4, responseRate: 86, qualifiedRate: 43, revenue: 2200, avgResponseSec: 7 },
     volumeByDay: [
