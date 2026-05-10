@@ -1,4 +1,5 @@
 import { createServerSupabase } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { Mail, Inbox, CheckCircle2, XCircle, Kanban, BarChart2, Zap, Megaphone, Users, Settings, FileText, UserPlus } from 'lucide-react'
@@ -20,8 +21,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .single()).data : null
 
   const client = userRow?.client_id
-    ? (await supabase.from('clients').select('id, business_name, twilio_number, stripe_account_id, gemini_prompt_override').eq('id', userRow.client_id).single()).data
+    ? (await supabase.from('clients').select('id, business_name, twilio_number, stripe_account_id, gemini_prompt_override, onboarding_complete').eq('id', userRow.client_id).single()).data
     : null
+
+  // Redirect to onboarding if not complete
+  if (user && client && !client.onboarding_complete) {
+    redirect('/onboarding')
+  }
 
   const displayName = userRow?.full_name || userRow?.email || 'Demo User'
   const businessName = client?.business_name || 'My Business'

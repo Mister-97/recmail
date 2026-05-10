@@ -390,7 +390,14 @@ export default function OnboardingPage() {
                   <p className="text-xs text-gray-600">{industryConfig.campaignTips[0]}</p>
                 </div>
               )}
-              <button onClick={() => router.push('/dashboard')}
+              <button onClick={async () => {
+                await fetch('/api/onboarding', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ businessName, industry, ownerPhone, promptOverride }),
+                })
+                router.push('/dashboard')
+              }}
                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3.5 rounded-2xl transition-all shadow-lg shadow-blue-500/30 text-sm">
                 Open your dashboard <ArrowRight className="w-4 h-4" />
               </button>
