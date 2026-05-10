@@ -19,6 +19,7 @@ export default async function ClientDetailPage({ params }: Props) {
     { data: client },
     { data: conversations, count: convCount },
     { data: users },
+    { data: auditLog },
   ] = await Promise.all([
     serviceSupabase.from('clients').select('*').eq('id', id).single(),
     serviceSupabase
@@ -31,6 +32,12 @@ export default async function ClientDetailPage({ params }: Props) {
       .from('users')
       .select('id, email, role, full_name, created_at')
       .eq('client_id', id),
+    serviceSupabase
+      .from('admin_audit_log')
+      .select('id, action, details, created_at')
+      .eq('client_id', id)
+      .order('created_at', { ascending: false })
+      .limit(20),
   ])
 
   if (!client) notFound()
@@ -263,6 +270,8 @@ export default async function ClientDetailPage({ params }: Props) {
             initialNotes={client.admin_notes ?? ''}
             initialMrr={client.mrr ?? 0}
             initialBusinessName={client.business_name ?? ''}
+            initialPrompt={client.gemini_prompt_override ?? ''}
+            initialTwilioNumber={client.twilio_number ?? ''}
           />
 
           {/* Conversations */}
@@ -314,6 +323,10 @@ export default async function ClientDetailPage({ params }: Props) {
                             <Clock className="w-3 h-3" />
                             {fmtTime(conv.updated_at)}
                           </span>
+                          <Link href={`/admin/conversations/${conv.id}`}
+                            className="text-[10px] font-semibold text-blue-600 hover:text-blue-800">
+                            Open
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -322,6 +335,80 @@ export default async function ClientDetailPage({ params }: Props) {
               </div>
             )}
           </div>
+
+          {/* Analytics */}
+          {convList.length > 0 && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <h2 className="text-sm font-bold text-gray-900 mb-4">Analytics</h2>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="text-center">
+                  <p className="text-2xl font-black text-gray-900">{convList.length}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Total Convos</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-black text-emerald-600">
+                    {convList.length > 0 ? Math.round((qualified / convList.length) * 100) : 0}%
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">Qualified Rate</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-black text-gray-900">
+                    {convList.length > 0 ? (convList.reduce((s, c) => s + (c.turn_count ?? 0), 0) / convList.length).toFixed(1) : '0'}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">Avg Turns</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-black text-blue-600">{open}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Still Open</p>
+                </div>
+              </div>
+              <div className="mt-4 flex gap-2">
+                {[
+                  { label: 'Open', count: open, color: 'bg-blue-500' },
+                  { label: 'Qualified', count: qualified, color: 'bg-emerald-500' },
+                  { label: 'Closed', count: closed, color: 'bg-gray-300' },
+                ].map(s => (
+                  <div key={s.label} className="flex-1">
+                    <div className="flex justify-between text-[10px] mb-1">
+                      <span className="text-gray-500">{s.label}</span>
+                      <span className="font-semibold text-gray-700">{s.count}</span>
+                    </div>
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className={`h-full ${s.color} rounded-full`} style={{ width: `${convList.length ? (s.count / convList.length) * 100 : 0}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Audit Log */}
+          {(auditLog ?? []).length > 0 && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100">
+                <h2 className="text-sm font-bold text-gray-900">Team Activity Log</h2>
+                <p className="text-xs text-gray-400 mt-0.5">All admin actions on this account</p>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {(auditLog ?? []).map(log => (
+                  <div key={log.id} className="px-5 py-3 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-semibold text-gray-700 capitalize">{log.action.replace(/_/g, ' ')}</span>
+                      {log.details && (
+                        <span className="text-xs text-gray-400 ml-2">
+                          {log.action === 'provision_number' && (log.details as any).phone_number}
+                          {log.action === 'password_reset' && `→ ${(log.details as any).email}`}
+                          {log.action === 'manual_sms' && `to ${(log.details as any).to}`}
+                          {log.action === 'update_client' && Object.keys(log.details as any).join(', ')}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-gray-400">{fmtTime(log.created_at)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

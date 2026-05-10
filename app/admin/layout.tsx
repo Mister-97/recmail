@@ -2,7 +2,7 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { serviceSupabase } from '@/lib/supabase/service'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Mail, BarChart2, MessageSquare } from 'lucide-react'
+import { Mail, BarChart2, MessageSquare, ClipboardList, Search } from 'lucide-react'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabase()
@@ -43,6 +43,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/feed" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors">
             <MessageSquare className="w-4 h-4" />
             <span className="font-medium">Live Feed</span>
+          </Link>
+          <Link href="/admin/onboarding" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors">
+            <ClipboardList className="w-4 h-4" />
+            <span className="font-medium">Onboarding</span>
+          </Link>
+          <Link href="/admin/search" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors">
+            <Search className="w-4 h-4" />
+            <span className="font-medium">Search</span>
           </Link>
         </nav>
 

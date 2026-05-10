@@ -10,28 +10,36 @@ async function assertAdmin() {
   return data ? user : null
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await assertAdmin()
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id } = await params
-  const body = await request.json()
 
-  const allowed = ['business_name', 'plan', 'plan_status', 'admin_notes', 'mrr', 'industry', 'twilio_number', 'gemini_prompt_override']
-  const updates: Record<string, unknown> = {}
-  for (const key of allowed) {
-    if (key in body) updates[key] = body[key]
-  }
+  // Get the client's owner email
+  const { data: clientUser } = await serviceSupabase
+    .from('users')
+    .select('email, id')
+    .eq('client_id', id)
+    .eq('role', 'owner')
+    .single()
 
-  const { error } = await serviceSupabase.from('clients').update(updates).eq('id', id)
+  if (!clientUser?.email) return NextResponse.json({ error: 'No owner found for this client' }, { status: 404 })
+
+  const { data, error } = await serviceSupabase.auth.admin.generateLink({
+    type: 'recovery',
+    email: clientUser.email,
+    options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard` },
+  })
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   await serviceSupabase.from('admin_audit_log').insert({
     admin_user_id: admin.id,
     client_id: id,
-    action: 'update_client',
-    details: updates,
+    action: 'password_reset',
+    details: { email: clientUser.email },
   })
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, email: clientUser.email, link: data.properties?.action_link })
 }
