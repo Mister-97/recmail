@@ -274,7 +274,7 @@ export default function OnboardingModal({
                 <p className="text-xs font-semibold text-blue-700 mb-1.5">How it works</p>
                 <div className="space-y-1.5">
                   {[
-                    'We provision a dedicated number on your behalf — no Twilio account needed',
+                    'We provision a dedicated number on your behalf — no extra accounts needed',
                     'Set your business phone to forward unanswered calls to your RecMail number',
                     'When a call goes unanswered, the AI automatically follows up via SMS',
                   ].map((t, i) => (
