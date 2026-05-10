@@ -2,7 +2,7 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { serviceSupabase } from '@/lib/supabase/service'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Mail, Users, Settings, BarChart2, MessageSquare } from 'lucide-react'
+import { Mail, BarChart2, MessageSquare } from 'lucide-react'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabase()
@@ -40,18 +40,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <BarChart2 className="w-4 h-4" />
             <span className="font-medium">Overview</span>
           </Link>
-          <Link href="/admin/clients" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors">
-            <Users className="w-4 h-4" />
-            <span className="font-medium">Clients</span>
-          </Link>
           <Link href="/admin/feed" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors">
             <MessageSquare className="w-4 h-4" />
             <span className="font-medium">Live Feed</span>
-          </Link>
-          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest px-3 pt-4 pb-2">Account</p>
-          <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors">
-            <Settings className="w-4 h-4" />
-            <span className="font-medium">My Inbox</span>
           </Link>
         </nav>
 
