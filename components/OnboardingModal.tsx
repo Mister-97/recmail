@@ -61,6 +61,14 @@ export default function OnboardingModal({
     if (!initialPrompt) setPromptOverride(getIndustry(id).systemPrompt)
   }
 
+  async function saveProgress(data: Record<string, string>) {
+    await fetch('/api/onboarding', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+  }
+
   async function save(opts?: { skipToEnd?: boolean }) {
     setSaving(true)
     try {
@@ -241,7 +249,9 @@ export default function OnboardingModal({
                 <button onClick={() => setStep('industry')} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 font-medium transition-colors">
                   <ArrowLeft className="w-4 h-4" /> Back
                 </button>
-                <button onClick={() => setStep('phone')} disabled={!businessName.trim()}
+                <button
+                  onClick={() => { saveProgress({ businessName, industry, ownerPhone }); setStep('phone') }}
+                  disabled={!businessName.trim()}
                   className="flex-1 flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 disabled:opacity-40 text-white font-bold py-3 rounded-2xl transition-colors text-sm">
                   Continue <ArrowRight className="w-4 h-4" />
                 </button>
