@@ -136,7 +136,7 @@ export default function OnboardingModal({
               </div>
               <h1 className="text-2xl font-black text-gray-900 mb-2">Welcome to RecMail</h1>
               <p className="text-gray-500 text-sm leading-relaxed mb-6">
-                Set up takes about 2 minutes. Every missed call will automatically start a text conversation — your AI receptionist handles the rest.
+                Set up takes about 2 minutes. Every missed call automatically starts a text conversation. Your AI receptionist handles the rest.
               </p>
               <div className="space-y-2.5 text-left mb-8">
                 {[
@@ -222,7 +222,7 @@ export default function OnboardingModal({
                     className={inputCls} />
                 </div>
                 <div>
-                  <label className={labelCls}>Your cell number <span className="text-gray-400 font-normal">(optional — for morning lead digests)</span></label>
+                  <label className={labelCls}>Your cell number <span className="text-gray-400 font-normal">(optional, for morning lead digests)</span></label>
                   <input value={ownerPhone} onChange={e => setOwnerPhone(e.target.value)}
                     placeholder="+1 (817) 555-0000" className={inputCls} />
                 </div>
@@ -274,7 +274,7 @@ export default function OnboardingModal({
                 <p className="text-xs font-semibold text-blue-700 mb-1.5">How it works</p>
                 <div className="space-y-1.5">
                   {[
-                    'We provision a dedicated number on your behalf — no extra accounts needed',
+                    'We provision a dedicated number on your behalf. No extra accounts needed.',
                     'Set your business phone to forward unanswered calls to your RecMail number',
                     'When a call goes unanswered, the AI automatically follows up via SMS',
                   ].map((t, i) => (
@@ -310,7 +310,7 @@ export default function OnboardingModal({
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">AI Receptionist</h2>
-                  <p className="text-xs text-gray-400">Pre-loaded for {industryConfig.label} {industryConfig.emoji} — customize as needed</p>
+                  <p className="text-xs text-gray-400">Pre-loaded for {industryConfig.label} {industryConfig.emoji}. Customize as needed.</p>
                 </div>
               </div>
               <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3 mb-4">
@@ -354,7 +354,7 @@ export default function OnboardingModal({
               <h2 className="text-2xl font-black text-gray-900 mb-2">You're set up!</h2>
               <p className="text-gray-500 text-sm leading-relaxed mb-4">
                 RecMail is ready for your {industryConfig.label.toLowerCase()} business.
-                {!twilioNumber && ' Your dedicated number will be assigned shortly — you\'ll see it in the banner above your inbox.'}
+                {!twilioNumber && ' Your dedicated number will be assigned shortly. You\'ll see it in the banner above your inbox.'}
               </p>
               {industryConfig.campaignTips[0] && (
                 <div className={cn('rounded-xl px-4 py-3 mb-6 text-left', industryConfig.bgColor)}>
