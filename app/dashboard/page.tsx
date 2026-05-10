@@ -1,4 +1,6 @@
 import { createServerSupabase } from '@/lib/supabase/server'
+import { serviceSupabase } from '@/lib/supabase/service'
+import { redirect } from 'next/navigation'
 import ConversationList from '@/components/inbox/ConversationList'
 import { Conversation } from '@/types/database'
 
@@ -127,6 +129,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
     .from('users').select('client_id').eq('id', user.id).single()
 
   if (!userRow?.client_id) {
+    // Check if this user is a RecMail admin — redirect them to the team portal
+    const { data: adminRow } = await serviceSupabase
+      .from('admins').select('user_id').eq('user_id', user.id).single()
+    if (adminRow) redirect('/admin')
+
     return (
       <div className="flex-1 flex items-center justify-center">
         <p className="text-sm text-gray-500">No business linked to this account. Contact your admin.</p>
