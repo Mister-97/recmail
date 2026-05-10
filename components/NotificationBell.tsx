@@ -34,8 +34,9 @@ function timeAgo(dateStr: string) {
 
 export default function NotificationBell({ clientId }: { clientId?: string }) {
   const [open, setOpen] = useState(false)
+  // Only show demo notifications for the explicit demo/unauthenticated view
   const [notifications, setNotifications] = useState<Notification[]>(
-    clientId && clientId !== 'mock-client' ? [] : DEMO_NOTIFICATIONS
+    clientId === 'mock-client' ? DEMO_NOTIFICATIONS : []
   )
   const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null)
   const btnRef = useRef<HTMLButtonElement>(null)

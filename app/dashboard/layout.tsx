@@ -47,7 +47,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         .select('id', { count: 'exact', head: true })
         .eq('client_id', client.id)
         .eq('status', 'qualified')).count ?? 0)
-    : MOCK_QUALIFIED_COUNT
+    : user ? 0 : MOCK_QUALIFIED_COUNT  // real users always get 0, only demo gets mock count
 
   return (
     <div className="flex h-screen overflow-hidden">
