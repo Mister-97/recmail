@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Save, CheckCircle2, AlertCircle, Building2, Phone, Brain, Clock, Bell, Webhook, CreditCard, Unlink, ExternalLink, Search, Loader2, Hash, Gift, Copy, Users, DollarSign, TrendingUp, Share2 } from 'lucide-react'
@@ -19,12 +19,6 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'referrals',     label: 'Referrals',     icon: <Gift className="w-4 h-4" /> },
 ]
 
-const MOCK_REFERRAL_CODE = 'PROAIR-X4K2'
-const MOCK_REFERRALS = [
-  { name: 'Fort Worth Plumbing Co.', status: 'active', since: 'Mar 2026', commission: 9.90 },
-  { name: 'Dallas Roofing Pros',     status: 'active', since: 'Apr 2026', commission: 9.90 },
-  { name: 'Saginaw Electric',        status: 'pending', since: 'May 2026', commission: 0 },
-]
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const HOURS = Array.from({ length: 24 }, (_, i) => {
@@ -49,13 +43,15 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('business')
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [referralCode, setReferralCode] = useState('')
 
   // Business
-  const [businessName, setBusinessName] = useState('ProAir HVAC')
-  const [twilioNumber, setTwilioNumber] = useState('+18175550000')
-  const [ownerPhone, setOwnerPhone] = useState('+18175559999')
+  const [businessName, setBusinessName] = useState('')
+  const [twilioNumber, setTwilioNumber] = useState('')
+  const [ownerPhone, setOwnerPhone] = useState('')
   const [timezone, setTimezone] = useState('America/Chicago')
-  const [depositAmount, setDepositAmount] = useState('75')
+  const [depositAmount, setDepositAmount] = useState('0')
   const [stripeConnected, setStripeConnected] = useState(false)
   const [stripeAccountId, setStripeAccountId] = useState('')
 
@@ -141,10 +137,19 @@ export default function SettingsPage() {
   // Referrals
   const [copied, setCopied] = useState(false)
   function copyReferralLink() {
-    navigator.clipboard.writeText(`https://recmail.io/signup?ref=${MOCK_REFERRAL_CODE}`)
+    navigator.clipboard.writeText(`https://recmail.vercel.app/signup?ref=${referralCode}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
+  const getToken = useCallback(async () => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data: { session } } = await supabase.auth.getSession()
+    return session?.access_token ?? null
+  }, [])
 
   // Integrations
   const [slackWebhook, setSlackWebhook] = useState('')
@@ -154,10 +159,34 @@ export default function SettingsPage() {
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    const tabParam = searchParams.get('tab') as Tab | null
-    if (tabParam && TABS.find(t => t.id === tabParam)) {
-      setActiveTab(tabParam)
+    async function loadSettings() {
+      const token = await getToken()
+      if (!token) return
+      try {
+        const res = await fetch('/api/settings', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        if (!res.ok) return
+        const { client } = await res.json()
+        if (!client) return
+        if (client.business_name) setBusinessName(client.business_name)
+        if (client.twilio_number) { setTwilioNumber(client.twilio_number); setNumberProvisioned(true) }
+        if (client.owner_phone) setOwnerPhone(client.owner_phone)
+        if (client.deposit_amount) setDepositAmount(String(client.deposit_amount))
+        if (client.stripe_account_id) { setStripeConnected(true); setStripeAccountId(client.stripe_account_id) }
+        if (client.slack_webhook_url) { setSlackConnected(true); setSlackChannel(client.slack_channel ?? ''); setSlackWorkspace(client.slack_workspace ?? '') }
+        if (client.slack_trigger) setSlackTrigger(client.slack_trigger)
+        if (client.gemini_prompt_override) setPromptOverride(client.gemini_prompt_override)
+        if (client.price_list) setPriceList(client.price_list)
+        if (client.referral_code) setReferralCode(client.referral_code)
+      } finally {
+        setLoading(false)
+      }
     }
+    loadSettings()
+
+    const tabParam = searchParams.get('tab') as Tab | null
+    if (tabParam && TABS.find(t => t.id === tabParam)) setActiveTab(tabParam)
 
     const stripeParam = searchParams.get('stripe')
     if (stripeParam === 'connected') {
@@ -188,9 +217,28 @@ export default function SettingsPage() {
 
   async function handleSave() {
     setSaving(true)
-    await new Promise(r => setTimeout(r, 600))
-    setSaving(false)
-    showToast('Settings saved!')
+    try {
+      const token = await getToken()
+      if (!token) { showToast('Not logged in', false); return }
+      const res = await fetch('/api/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          business_name: businessName,
+          owner_phone: ownerPhone,
+          gemini_prompt_override: promptOverride,
+          price_list: priceList,
+          deposit_amount: depositAmount ? Number(depositAmount) : 0,
+          slack_trigger: slackTrigger,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      showToast('Settings saved!')
+    } catch {
+      showToast('Failed to save settings', false)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const inputCls = "w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 transition-all"
@@ -780,7 +828,7 @@ export default function SettingsPage() {
             {/* Referrals */}
             {activeTab === 'referrals' && (
               <>
-                <RoiWidget conversationsStarted={47} qualifiedLeads={12} avgJobValue={350} />
+                <RoiWidget conversationsStarted={0} qualifiedLeads={0} avgJobValue={0} />
 
                 <div className={sectionCls}>
                   <div className="flex items-center gap-3">
@@ -794,7 +842,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex gap-2">
                     <div className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-mono text-sm text-gray-700 truncate">
-                      {`https://recmail.io/signup?ref=${MOCK_REFERRAL_CODE}`}
+                      {referralCode ? `https://recmail.vercel.app/signup?ref=${referralCode}` : 'Loading…'}
                     </div>
                     <button onClick={copyReferralLink}
                       className={cn('flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all',
@@ -805,16 +853,16 @@ export default function SettingsPage() {
                     </button>
                   </div>
                   <div className="bg-purple-50 border border-purple-100 rounded-xl px-3 py-2.5">
-                    <p className="text-xs font-semibold text-purple-800">Code: <span className="font-mono">{MOCK_REFERRAL_CODE}</span></p>
+                    <p className="text-xs font-semibold text-purple-800">Code: <span className="font-mono">{referralCode || '—'}</span></p>
                     <p className="text-[11px] text-purple-600 mt-0.5">Anyone who signs up with your link is linked permanently.</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
                   {[
-                    { icon: <Users className="w-4 h-4 text-blue-600" />, bg: 'bg-blue-50', label: 'Active referrals', value: 2, sub: '3 total' },
-                    { icon: <DollarSign className="w-4 h-4 text-emerald-600" />, bg: 'bg-emerald-50', label: 'Monthly commission', value: '$19.80', sub: 'paid on the 1st' },
-                    { icon: <TrendingUp className="w-4 h-4 text-amber-600" />, bg: 'bg-amber-50', label: 'Annual projection', value: '$238', sub: 'at current rate' },
+                    { icon: <Users className="w-4 h-4 text-blue-600" />, bg: 'bg-blue-50', label: 'Active referrals', value: 0, sub: '0 total' },
+                    { icon: <DollarSign className="w-4 h-4 text-emerald-600" />, bg: 'bg-emerald-50', label: 'Monthly commission', value: '$0.00', sub: 'paid on the 1st' },
+                    { icon: <TrendingUp className="w-4 h-4 text-amber-600" />, bg: 'bg-amber-50', label: 'Annual projection', value: '$0', sub: 'at current rate' },
                   ].map(stat => (
                     <div key={stat.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
                       <div className={cn('w-8 h-8 rounded-xl flex items-center justify-center mb-3', stat.bg)}>{stat.icon}</div>
@@ -827,31 +875,9 @@ export default function SettingsPage() {
 
                 <div className={sectionCls}>
                   <p className="text-sm font-bold text-gray-900">Your referrals</p>
-                  <div className="-mx-6 divide-y divide-gray-50">
-                    {MOCK_REFERRALS.map(ref => (
-                      <div key={ref.name} className="px-6 py-3.5 flex items-center gap-4">
-                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-500 flex-shrink-0">
-                          {ref.name[0]}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 truncate">{ref.name}</p>
-                          <p className="text-xs text-gray-400">Joined {ref.since}</p>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          {ref.status === 'active' ? (
-                            <>
-                              <p className="text-sm font-bold text-emerald-600">+${ref.commission.toFixed(2)}/mo</p>
-                              <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full">Active</span>
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-sm text-gray-400">Pending</p>
-                              <span className="text-[10px] font-semibold bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">Trial</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                  <div className="py-8 text-center">
+                    <Users className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+                    <p className="text-sm text-gray-400">No referrals yet. Share your link to start earning.</p>
                   </div>
                 </div>
 
