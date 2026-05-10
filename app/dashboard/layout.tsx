@@ -29,7 +29,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/onboarding')
   }
 
-  const displayName = userRow?.full_name || userRow?.email || 'Demo User'
+  const displayName = userRow?.full_name || userRow?.email || user?.email || 'User'
   const businessName = client?.business_name || 'My Business'
   const bizInitials = businessName.slice(0, 2).toUpperCase()
 
