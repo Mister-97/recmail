@@ -1,7 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { Mail, Inbox, CheckCircle2, XCircle, Kanban, BarChart2, Zap, Megaphone, Users, Settings } from 'lucide-react'
+import { Mail, Inbox, CheckCircle2, XCircle, Kanban, BarChart2, Zap, Megaphone, Users, Settings, FileText, UserPlus } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
 import GlobalSearch from '@/components/GlobalSearch'
 import SidebarItem from '@/components/SidebarItem'
@@ -84,7 +84,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <SidebarItem href="/dashboard/automations" icon={<Zap className="w-4 h-4" />} label="Automations" />
             <SidebarItem href="/dashboard/campaigns" icon={<Megaphone className="w-4 h-4" />} label="Campaigns" />
             <SidebarItem href="/dashboard/customers" icon={<Users className="w-4 h-4" />} label="Customers" />
-<SidebarItem href="/dashboard/settings" icon={<Settings className="w-4 h-4" />} label="Settings" />
+            <SidebarItem href="/dashboard/reports" icon={<FileText className="w-4 h-4" />} label="Reports" />
+            <SidebarItem href="/dashboard/team" icon={<UserPlus className="w-4 h-4" />} label="Team" />
+            <SidebarItem href="/dashboard/settings" icon={<Settings className="w-4 h-4" />} label="Settings" />
           </Suspense>
         </nav>
 
