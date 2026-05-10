@@ -2,7 +2,7 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { serviceSupabase } from '@/lib/supabase/service'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Mail, BarChart2, MessageSquare, ClipboardList, Search } from 'lucide-react'
+import { Mail, BarChart2, MessageSquare, ClipboardList, Search, ShieldCheck } from 'lucide-react'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabase()
@@ -13,11 +13,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // Check admin status
   const { data: adminRow } = await serviceSupabase
     .from('admins')
-    .select('user_id')
+    .select('user_id, is_super_admin')
     .eq('user_id', user.id)
     .single()
 
   if (!adminRow) redirect('/dashboard')
+
+  const isSuperAdmin = adminRow.is_super_admin ?? false
 
   return (
     <div className="flex h-screen bg-[#f7f8fc] overflow-hidden">
@@ -52,11 +54,23 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Search className="w-4 h-4" />
             <span className="font-medium">Search</span>
           </Link>
+          {isSuperAdmin && (
+            <>
+              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest px-3 pt-4 pb-2">Super Admin</p>
+              <Link href="/admin/team" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors">
+                <ShieldCheck className="w-4 h-4" />
+                <span className="font-medium">Team</span>
+              </Link>
+            </>
+          )}
         </nav>
 
         <div className="px-4 pt-4 border-t border-white/10">
-          <p className="text-[10px] text-gray-500">Logged in as</p>
-          <p className="text-xs font-semibold text-gray-300 truncate mt-0.5">{user.email}</p>
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <p className="text-[10px] text-gray-500">Logged in as</p>
+            {isSuperAdmin && <ShieldCheck className="w-3 h-3 text-purple-400" />}
+          </div>
+          <p className="text-xs font-semibold text-gray-300 truncate">{user.email}</p>
         </div>
       </aside>
 
