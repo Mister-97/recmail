@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Save, CheckCircle2, AlertCircle, Building2, Phone, Brain, Clock, Bell, Webhook, CreditCard, Unlink, ExternalLink, Search, Loader2, Hash, Gift, Copy, Users, DollarSign, TrendingUp, Share2 } from 'lucide-react'
 import RoiWidget from '@/components/RoiWidget'
+import { createBrowserClient } from '@supabase/ssr'
 
 type Tab = 'business' | 'ai' | 'hours' | 'notifications' | 'integrations' | 'billing' | 'referrals'
 
@@ -107,9 +108,17 @@ export default function SettingsPage() {
   async function provisionNumber(phoneNumber: string) {
     setProvisioningNumber(phoneNumber)
     try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/twilio/numbers/provision', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({ phone_number: phoneNumber }),
       })
       if (!res.ok) throw new Error()
