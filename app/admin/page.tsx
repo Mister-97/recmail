@@ -1,6 +1,6 @@
 import { serviceSupabase } from '@/lib/supabase/service'
 import Link from 'next/link'
-import { Users, MessageSquare, CheckCircle2, Phone, TrendingUp, AlertCircle, ExternalLink, Clock } from 'lucide-react'
+import { Users, MessageSquare, CheckCircle2, Phone, AlertCircle, ExternalLink, Clock, DollarSign, XCircle, Activity } from 'lucide-react'
 
 export default async function AdminPage() {
   const [
@@ -10,12 +10,16 @@ export default async function AdminPage() {
     { count: qualifiedCount },
     { count: openCount },
   ] = await Promise.all([
-    serviceSupabase.from('clients').select('id, business_name, twilio_number, plan, industry, created_at, stripe_account_id, slack_webhook_url', { count: 'exact' }).order('created_at', { ascending: false }),
+    serviceSupabase.from('clients').select('id, business_name, twilio_number, plan, plan_status, industry, created_at, stripe_account_id, slack_webhook_url, mrr', { count: 'exact' }).order('created_at', { ascending: false }),
     serviceSupabase.from('conversations').select('*', { count: 'exact', head: true }),
     serviceSupabase.from('messages').select('*', { count: 'exact', head: true }),
     serviceSupabase.from('conversations').select('*', { count: 'exact', head: true }).eq('status', 'qualified'),
     serviceSupabase.from('conversations').select('*', { count: 'exact', head: true }).eq('status', 'open'),
   ])
+
+  const totalMrr = (clients ?? []).reduce((sum, c) => sum + (c.mrr ?? 0), 0)
+  const activeClients = (clients ?? []).filter(c => c.plan_status === 'active').length
+  const needsAttention = (clients ?? []).filter(c => !c.twilio_number || c.plan_status === 'trial')
 
   // Per-client conversation counts
   const clientIds = (clients ?? []).map(c => c.id)
@@ -37,6 +41,12 @@ export default async function AdminPage() {
     starter: 'bg-gray-100 text-gray-600',
     growth: 'bg-blue-100 text-blue-700',
     pro: 'bg-purple-100 text-purple-700',
+  }
+  const statusColors: Record<string, string> = {
+    active: 'bg-emerald-100 text-emerald-700',
+    trial: 'bg-amber-100 text-amber-700',
+    suspended: 'bg-red-100 text-red-700',
+    churned: 'bg-gray-100 text-gray-500',
   }
 
   const today = new Date()
@@ -63,13 +73,14 @@ export default async function AdminPage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-6 gap-4 mb-6">
         {[
-          { icon: <Users className="w-4 h-4 text-blue-600" />, bg: 'bg-blue-50', label: 'Active Clients', value: clientCount ?? 0 },
-          { icon: <MessageSquare className="w-4 h-4 text-indigo-600" />, bg: 'bg-indigo-50', label: 'Total Conversations', value: convCount ?? 0 },
-          { icon: <Phone className="w-4 h-4 text-violet-600" />, bg: 'bg-violet-50', label: 'Messages Sent', value: msgCount ?? 0 },
+          { icon: <DollarSign className="w-4 h-4 text-emerald-600" />, bg: 'bg-emerald-50', label: 'Monthly Revenue', value: `$${totalMrr.toLocaleString()}` },
+          { icon: <Users className="w-4 h-4 text-blue-600" />, bg: 'bg-blue-50', label: 'Total Accounts', value: clientCount ?? 0 },
+          { icon: <Activity className="w-4 h-4 text-violet-600" />, bg: 'bg-violet-50', label: 'Active Paid', value: activeClients },
+          { icon: <MessageSquare className="w-4 h-4 text-indigo-600" />, bg: 'bg-indigo-50', label: 'Conversations', value: convCount ?? 0 },
           { icon: <AlertCircle className="w-4 h-4 text-amber-600" />, bg: 'bg-amber-50', label: 'Open Leads', value: openCount ?? 0 },
-          { icon: <CheckCircle2 className="w-4 h-4 text-emerald-600" />, bg: 'bg-emerald-50', label: 'Qualified Leads', value: qualifiedCount ?? 0 },
+          { icon: <CheckCircle2 className="w-4 h-4 text-emerald-600" />, bg: 'bg-emerald-50', label: 'Qualified', value: qualifiedCount ?? 0 },
         ].map(stat => (
           <div key={stat.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-3 ${stat.bg}`}>{stat.icon}</div>
@@ -78,6 +89,30 @@ export default async function AdminPage() {
           </div>
         ))}
       </div>
+
+      {/* Needs attention */}
+      {needsAttention.length > 0 && (
+        <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertCircle className="w-4 h-4 text-amber-600" />
+            <p className="text-sm font-bold text-amber-800">Needs attention ({needsAttention.length})</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {needsAttention.map(c => (
+              <Link key={c.id} href={`/admin/clients/${c.id}`}
+                className="flex items-center gap-2 bg-white border border-amber-200 rounded-xl px-3 py-2 hover:border-amber-400 transition-colors">
+                <div className="w-5 h-5 rounded bg-amber-100 flex items-center justify-center text-[9px] font-bold text-amber-700">
+                  {c.business_name?.slice(0, 2).toUpperCase()}
+                </div>
+                <span className="text-xs font-semibold text-gray-800">{c.business_name}</span>
+                <span className="text-[10px] text-amber-600">
+                  {!c.twilio_number ? 'No number' : 'Trial'}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Client table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -94,6 +129,7 @@ export default async function AdminPage() {
               <th className="text-left px-6 py-3 text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Business</th>
               <th className="text-left px-6 py-3 text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Industry</th>
               <th className="text-left px-6 py-3 text-[11px] text-gray-400 font-semibold uppercase tracking-wider">RecMail #</th>
+              <th className="text-left px-6 py-3 text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Status</th>
               <th className="text-left px-6 py-3 text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Plan</th>
               <th className="text-left px-6 py-3 text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Integrations</th>
               <th className="text-left px-6 py-3 text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Conversations</th>
@@ -124,6 +160,11 @@ export default async function AdminPage() {
                     {client.twilio_number
                       ? <span className="font-mono text-xs text-gray-700">{client.twilio_number}</span>
                       : <span className="text-xs text-gray-300">Not provisioned</span>}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full capitalize ${statusColors[client.plan_status ?? 'trial']}`}>
+                      {client.plan_status ?? 'trial'}
+                    </span>
                   </td>
                   <td className="px-6 py-4">
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full capitalize ${planColors[client.plan] ?? planColors.starter}`}>
