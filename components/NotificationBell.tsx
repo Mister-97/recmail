@@ -34,7 +34,9 @@ function timeAgo(dateStr: string) {
 
 export default function NotificationBell({ clientId }: { clientId?: string }) {
   const [open, setOpen] = useState(false)
-  const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS)
+  const [notifications, setNotifications] = useState<Notification[]>(
+    clientId && clientId !== 'mock-client' ? [] : DEMO_NOTIFICATIONS
+  )
   const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)

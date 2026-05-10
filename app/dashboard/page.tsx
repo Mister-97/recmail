@@ -167,14 +167,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
     })
   )
 
-  // Fall back to mock data for demo when no real conversations exist yet
-  const displayConversations = conversationsWithPreview.length > 0
-    ? conversationsWithPreview
-    : MOCK_CONVERSATIONS
-
   return (
     <ConversationList
-      initialConversations={displayConversations}
+      initialConversations={conversationsWithPreview}
       clientId={userRow.client_id}
       activeTab={activeTab}
     />

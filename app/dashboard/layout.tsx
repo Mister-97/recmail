@@ -73,7 +73,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
         {/* Global search */}
         <div className="px-2 pb-3">
-          <GlobalSearch conversations={MOCK_CONVERSATIONS} />
+          <GlobalSearch conversations={client?.id ? [] : MOCK_CONVERSATIONS} />
         </div>
 
         {/* Nav */}
