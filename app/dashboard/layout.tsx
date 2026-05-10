@@ -21,7 +21,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .single()).data : null
 
   const client = userRow?.client_id
-    ? (await supabase.from('clients').select('id, business_name, twilio_number, stripe_account_id, gemini_prompt_override, onboarding_complete').eq('id', userRow.client_id).single()).data
+    ? (await supabase.from('clients').select('id, business_name, industry, owner_phone, twilio_number, stripe_account_id, gemini_prompt_override, onboarding_complete').eq('id', userRow.client_id).single()).data
     : null
 
   const displayName = userRow?.full_name || userRow?.email || user?.email || 'User'
@@ -119,6 +119,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <OnboardingModal
           twilioNumber={client?.twilio_number ?? null}
           initialBusinessName={client?.business_name ?? ''}
+          initialIndustry={(client as any)?.industry ?? 'hvac'}
+          initialOwnerPhone={(client as any)?.owner_phone ?? ''}
           initialPrompt={client?.gemini_prompt_override ?? ''}
         />
       )}

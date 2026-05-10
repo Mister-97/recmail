@@ -23,20 +23,30 @@ function formatPhone(phone: string) {
   return phone
 }
 
+function deriveStartStep(businessName: string, prompt: string): Step {
+  if (businessName && prompt) return 'ai'   // have both — let them review AI config
+  if (businessName) return 'ai'              // have business info — jump to AI
+  return 'welcome'
+}
+
 export default function OnboardingModal({
   twilioNumber,
   initialBusinessName = '',
+  initialIndustry = 'hvac',
+  initialOwnerPhone = '',
   initialPrompt = '',
 }: {
   twilioNumber: string | null
   initialBusinessName?: string
+  initialIndustry?: string
+  initialOwnerPhone?: string
   initialPrompt?: string
 }) {
   const [open, setOpen] = useState(true)
-  const [step, setStep] = useState<Step>('welcome')
-  const [industry, setIndustry] = useState<Industry>('hvac')
+  const [step, setStep] = useState<Step>(() => deriveStartStep(initialBusinessName, initialPrompt))
+  const [industry, setIndustry] = useState<Industry>((initialIndustry as Industry) || 'hvac')
   const [businessName, setBusinessName] = useState(initialBusinessName)
-  const [ownerPhone, setOwnerPhone] = useState('')
+  const [ownerPhone, setOwnerPhone] = useState(initialOwnerPhone)
   const [promptOverride, setPromptOverride] = useState(initialPrompt)
   const [saving, setSaving] = useState(false)
   const router = useRouter()
