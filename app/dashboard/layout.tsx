@@ -1,6 +1,6 @@
 import { createServerSupabase } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import OnboardingModal from '@/components/OnboardingModal'
 import { Suspense } from 'react'
 import { Mail, Inbox, CheckCircle2, XCircle, Kanban, BarChart2, Zap, Megaphone, Users, Settings, FileText, UserPlus } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
@@ -23,11 +23,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const client = userRow?.client_id
     ? (await supabase.from('clients').select('id, business_name, twilio_number, stripe_account_id, gemini_prompt_override, onboarding_complete').eq('id', userRow.client_id).single()).data
     : null
-
-  // Redirect to onboarding if not complete
-  if (user && client && !client.onboarding_complete) {
-    redirect('/onboarding')
-  }
 
   const displayName = userRow?.full_name || userRow?.email || user?.email || 'User'
   const businessName = client?.business_name || 'My Business'
@@ -118,6 +113,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
         /></Suspense>
         {children}
       </main>
+
+      {/* Onboarding modal — shown on first login until dismissed */}
+      {user && client && !client.onboarding_complete && (
+        <OnboardingModal
+          twilioNumber={client.twilio_number ?? null}
+          initialBusinessName={client.business_name ?? ''}
+          initialPrompt={client.gemini_prompt_override ?? ''}
+        />
+      )}
 
     </div>
   )

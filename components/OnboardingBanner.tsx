@@ -1,42 +1,33 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, X, Phone, CreditCard, Brain, ArrowRight, PhoneForwarded } from 'lucide-react'
+import { CheckCircle2, Phone, Brain, PhoneForwarded } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface OnboardingBannerProps {
   hasNumber: boolean
   hasStripe: boolean
   hasPrompt: boolean
-  hasForwarding?: boolean
 }
 
-export default function OnboardingBanner({ hasNumber, hasStripe, hasPrompt, hasForwarding = false }: OnboardingBannerProps) {
-  const [dismissed, setDismissed] = useState(false)
+export default function OnboardingBanner({ hasNumber, hasPrompt }: OnboardingBannerProps) {
   const router = useRouter()
 
   const steps = [
     {
       id: 'number',
       icon: Phone,
-      title: 'Get your RecMail number',
-      action: 'Pick a number',
+      title: 'Number assigned',
+      pendingTitle: 'Awaiting your number',
+      action: 'View settings',
       href: '/dashboard/settings',
       done: hasNumber,
     },
     {
-      id: 'stripe',
-      icon: CreditCard,
-      title: 'Connect Stripe',
-      action: 'Connect',
-      href: '/dashboard/settings?tab=integrations#stripe',
-      done: hasStripe,
-    },
-    {
       id: 'prompt',
       icon: Brain,
-      title: 'Train your AI',
+      title: 'AI configured',
+      pendingTitle: 'Train your AI',
       action: 'Customize',
       href: '/dashboard/settings?tab=ai',
       done: hasPrompt,
@@ -44,17 +35,18 @@ export default function OnboardingBanner({ hasNumber, hasStripe, hasPrompt, hasF
     {
       id: 'forwarding',
       icon: PhoneForwarded,
-      title: 'Set up call forwarding',
+      title: 'Call forwarding set',
+      pendingTitle: 'Set up call forwarding',
       action: 'How to',
       href: '/dashboard/settings?tab=business#forwarding',
-      done: hasForwarding,
+      done: hasNumber, // once number is assigned, they can set forwarding
     },
   ]
 
   const completedCount = steps.filter(s => s.done).length
   const allDone = completedCount === steps.length
 
-  if (dismissed || allDone) return null
+  if (allDone) return null
 
   return (
     <div className="flex-shrink-0 bg-indigo-950 border-b border-indigo-900 px-6 py-0">
@@ -96,17 +88,12 @@ export default function OnboardingBanner({ hasNumber, hasStripe, hasPrompt, hasF
                     ? <CheckCircle2 className="w-3 h-3 text-emerald-400 flex-shrink-0" />
                     : <Icon className="w-3 h-3 flex-shrink-0" />
                   }
-                  {step.title}
+                  {step.done ? step.title : step.pendingTitle}
                 </button>
               </div>
             )
           })}
         </div>
-
-        {/* Dismiss */}
-        <button onClick={() => setDismissed(true)} className="text-indigo-600 hover:text-indigo-400 transition-colors flex-shrink-0 ml-auto">
-          <X className="w-3.5 h-3.5" />
-        </button>
       </div>
     </div>
   )
