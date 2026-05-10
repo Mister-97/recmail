@@ -114,8 +114,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {children}
       </main>
 
-      {/* Onboarding modal — shown on first login until dismissed */}
-      {user && client && !client.onboarding_complete && (
+      {/* Onboarding modal — shown until at least one real step is completed */}
+      {user && client && (!client.onboarding_complete || (!client.twilio_number && !client.gemini_prompt_override)) && (
         <OnboardingModal
           twilioNumber={client.twilio_number ?? null}
           initialBusinessName={client.business_name ?? ''}
